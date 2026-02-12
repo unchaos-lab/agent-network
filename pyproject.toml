@@ -8,10 +8,12 @@ dependencies = [
     "uvicorn[standard]>=0.34",
     "httpx>=0.28",
     "pydantic-settings>=2.7",
+    "aio-pika>=9.4",
 ]
 
 [project.scripts]
 agent-network = "agent_network.startup:main"
+agent-network-worker = "agent_network.worker_main:main"
 
 [build-system]
 requires = ["setuptools>=75", "wheel"]
