@@ -1,4 +1,23 @@
 services:
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - unchaos-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   agent-network:
     build: .
     ports:
@@ -10,10 +29,32 @@ services:
       - ADMIN_EMAIL=${INIT_ADMIN_EMAIL:-admin@example.com}
       - ADMIN_PASSWORD=${INIT_ADMIN_PASSWORD:-change-this-password}
       - WEBHOOK_EVENTS=task.created,task.updated,task.deleted,task.moved,task.commented,task.feedback_added,user.created,user.updated,user.deleted
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
       - LOG_LEVEL=INFO
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
     networks:
       - unchaos-network
     restart: unless-stopped
+
+  worker:
+    build: .
+    command: ["agent-network-worker"]
+    environment:
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - LOG_LEVEL=INFO
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - unchaos-network
+    restart: unless-stopped
+    deploy:
+      replicas: 1
+
+volumes:
+  rabbitmq_data:
 
 networks:
   unchaos-network:
