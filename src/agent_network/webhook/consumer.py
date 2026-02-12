@@ -8,12 +8,27 @@ from typing import Any
 
 from fastapi import FastAPI, Header, HTTPException, Request, status
 
+from agent_network.messaging.publisher import RabbitPublisher
 from agent_network.webhook.signature import verify_signature
 
 logger = logging.getLogger(__name__)
 
+# Events that should be forwarded to RabbitMQ
+_TASK_EVENTS = frozenset({
+    "task.created",
+    "task.updated",
+    "task.deleted",
+    "task.moved",
+    "task.commented",
+    "task.feedback_added",
+})
 
-def create_consumer_app(*, secret: str | None = None) -> FastAPI:
+
+def create_consumer_app(
+    *,
+    secret: str | None = None,
+    publisher: RabbitPublisher | None = None,
+) -> FastAPI:
     """Build and return a :class:`FastAPI` application for consuming webhooks.
 
     Parameters
@@ -21,11 +36,15 @@ def create_consumer_app(*, secret: str | None = None) -> FastAPI:
     secret:
         The HMAC secret returned when the webhook was registered.
         When ``None`` signature verification is skipped (not recommended).
+    publisher:
+        An optional :class:`RabbitPublisher` instance.  When provided,
+        task events are forwarded to RabbitMQ.
     """
     app = FastAPI(title="Agent Network — Webhook Consumer")
 
     # Store the secret on the app so middleware / routes can access it.
     app.state.webhook_secret = secret
+    app.state.publisher = publisher
 
     @app.get("/health")
     async def health() -> dict[str, str]:
@@ -70,6 +89,11 @@ def create_consumer_app(*, secret: str | None = None) -> FastAPI:
         data = payload.get("data", {})
 
         _log_event(event, data)
+
+        # ── Forward task events to RabbitMQ ───────────────────────
+        pub: RabbitPublisher | None = request.app.state.publisher
+        if pub and event in _TASK_EVENTS:
+            await pub.publish(routing_key=event, body=payload)
 
         return {"status": "received"}
 
