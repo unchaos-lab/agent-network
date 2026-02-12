@@ -26,6 +26,12 @@ class Settings(BaseSettings):
         "user.created,user.updated,user.deleted"
     )
 
+    # RabbitMQ
+    rabbitmq_url: str = "amqp://guest:guest@rabbitmq:5672/"
+    rabbitmq_exchange: str = "agent_network"
+    rabbitmq_task_queue: str = "task_events"
+    rabbitmq_routing_key: str = "task.created"
+
     # Startup behaviour
     max_retries: int = 30
     retry_interval: int = 2

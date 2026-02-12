@@ -1,16 +1,18 @@
-"""Startup orchestrator — health-check, webhook signup, and serve."""
+"""Startup orchestrator — health-check, webhook signup, RabbitMQ, and serve."""
 
 from __future__ import annotations
 
 import logging
 import sys
 import time
+from contextlib import asynccontextmanager
 
 import httpx
 import uvicorn
 
 from agent_network.api.client import LightTasksClient
 from agent_network.config import Settings, get_settings
+from agent_network.messaging.publisher import RabbitPublisher
 from agent_network.webhook.consumer import create_consumer_app
 from agent_network.webhook.registry import WebhookRegistry
 
@@ -79,8 +81,19 @@ def main() -> None:
             )
             sys.exit(1)
 
-    # 3. Start the consumer server
-    app = create_consumer_app(secret=secret)
+    # 3. Start the consumer server (worker runs in separate containers)
+    publisher = RabbitPublisher(settings)
+
+    @asynccontextmanager
+    async def _lifespan(app):  # noqa: ANN001
+        """Connect publisher on startup; clean up on shutdown."""
+        await publisher.connect()
+        logger.info("RabbitMQ publisher connected")
+        yield
+        await publisher.close()
+
+    app = create_consumer_app(secret=secret, publisher=publisher)
+    app.router.lifespan_context = _lifespan
 
     logger.info(
         "Starting webhook consumer on %s:%d",
