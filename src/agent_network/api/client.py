@@ -23,9 +23,16 @@ class LightTasksClient:
         Optional JWT bearer token to include in every request.
     """
 
-    def __init__(self, settings: Settings, *, token: str | None = None) -> None:
+    def __init__(
+        self,
+        settings: Settings,
+        *,
+        token: str | None = None,
+        api_key: str | None = None,
+    ) -> None:
         self._base = f"{settings.api_base_url}{settings.api_prefix}"
         self._token = token
+        self._api_key = api_key
         self._timeout = httpx.Timeout(10.0)
 
     # ── Public helpers ──────────────────────────────────────────────
@@ -52,6 +59,8 @@ class LightTasksClient:
         headers: dict[str, str] = {}
         if self._token:
             headers["Authorization"] = f"Bearer {self._token}"
+        elif self._api_key:
+            headers["X-API-Key"] = self._api_key
 
         logger.debug("%s %s", method, url)
 
@@ -72,6 +81,9 @@ class LightTasksClient:
 
     def post(self, path: str, *, json: dict[str, Any] | None = None) -> httpx.Response:
         return self.request("POST", path, json=json)
+
+    def patch(self, path: str, *, json: dict[str, Any] | None = None) -> httpx.Response:
+        return self.request("PATCH", path, json=json)
 
     def delete(self, path: str) -> httpx.Response:
         return self.request("DELETE", path)
