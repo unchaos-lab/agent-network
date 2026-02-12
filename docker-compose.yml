@@ -1,0 +1,20 @@
+services:
+  agent-network:
+    build: .
+    ports:
+      - "9100:9000"
+    environment:
+      - API_BASE_URL=http://app:8000
+      - WEBHOOK_PORT=9000
+      - WEBHOOK_CALLBACK_URL=http://agent-network:9000/webhook
+      - ADMIN_EMAIL=${INIT_ADMIN_EMAIL:-admin@example.com}
+      - ADMIN_PASSWORD=${INIT_ADMIN_PASSWORD:-change-this-password}
+      - WEBHOOK_EVENTS=task.created,task.updated,task.deleted,task.moved,task.commented,task.feedback_added,user.created,user.updated,user.deleted
+      - LOG_LEVEL=INFO
+    networks:
+      - unchaos-network
+    restart: unless-stopped
+
+networks:
+  unchaos-network:
+    external: true

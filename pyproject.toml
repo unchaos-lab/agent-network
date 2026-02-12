@@ -1,0 +1,21 @@
+[project]
+name = "agent-network"
+version = "0.1.0"
+description = "Webhook consumer and event processor for Light-Tasks"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.34",
+    "httpx>=0.28",
+    "pydantic-settings>=2.7",
+]
+
+[project.scripts]
+agent-network = "agent_network.startup:main"
+
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
