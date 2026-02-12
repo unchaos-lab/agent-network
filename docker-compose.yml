@@ -42,6 +42,8 @@ services:
     build: .
     command: ["agent-network-worker"]
     environment:
+      - API_BASE_URL=http://app:8000
+      - AGENT_API_KEY=${AGENT_API_KEY}
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
       - LOG_LEVEL=INFO
     depends_on:

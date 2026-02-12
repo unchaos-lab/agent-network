@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     admin_email: str = "admin@example.com"
     admin_password: str = "admin123"
 
+    # Agent API key for authenticating as an agent user
+    agent_api_key: str = ""
+
     # Webhook consumer
     webhook_host: str = "0.0.0.0"
     webhook_port: int = 9000
