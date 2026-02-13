@@ -68,7 +68,10 @@ async def process_message(event: str, data: dict[str, Any]) -> None:
 
     service = _get_service()
     try:
-        task = execute_worker_agent(data.get("description", ""))
+        agent_id = data.get("responsible", {}).get("id", "unknown")
+        logger.info(f"Processing task {task_id} assigned to agent {agent_id}")
+
+        task = execute_worker_agent(data.get("description", ""), agent_id)
         service.add_comment(task_id, task)
         service.mark_task_done(task_id)
         logger.info("Task %s marked as done", task_id)
