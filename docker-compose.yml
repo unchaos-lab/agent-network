@@ -18,6 +18,22 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --appendfsync everysec
+    volumes:
+      - redis_data:/data
+    networks:
+      - unchaos-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   agent-network:
     build: .
     ports:
@@ -32,9 +48,12 @@ services:
       - ADMIN_PASSWORD=${INIT_ADMIN_PASSWORD:-change-this-password}
       - WEBHOOK_EVENTS=task.created,task.updated,task.deleted,task.moved,task.commented,task.feedback_added,user.created,user.updated,user.deleted
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - REDIS_URL=redis://redis:6379/0
       - LOG_LEVEL=INFO
     depends_on:
       rabbitmq:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - unchaos-network
@@ -49,9 +68,12 @@ services:
       - API_BASE_URL=http://app:8000
       - AGENT_API_KEY=${AGENT_API_KEY}
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - REDIS_URL=redis://redis:6379/0
       - LOG_LEVEL=INFO
     depends_on:
       rabbitmq:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - unchaos-network
@@ -61,6 +83,7 @@ services:
 
 volumes:
   rabbitmq_data:
+  redis_data:
 
 networks:
   unchaos-network:
