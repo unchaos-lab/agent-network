@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     rabbitmq_task_queue: str = "task_events"
     rabbitmq_routing_key: str = "task.created"
 
+    # Redis
+    redis_url: str = "redis://redis:6379/0"
+
     # Startup behaviour
     max_retries: int = 30
     retry_interval: int = 2
