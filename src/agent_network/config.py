@@ -3,6 +3,7 @@
 from functools import lru_cache
 
 from pydantic_settings import BaseSettings
+from pydantic import Field, SecretStr
 
 
 class Settings(BaseSettings):
@@ -41,6 +42,9 @@ class Settings(BaseSettings):
 
     # Logging
     log_level: str = "INFO"
+
+    LLM_MODEL_NAME: str = Field(description="Name of the language model to use")
+    GEMINI_API_KEY: SecretStr = Field(description="API key for Google services")
 
     @property
     def webhook_events_list(self) -> list[str]:
