@@ -8,14 +8,14 @@ from agent_network.config import get_settings
 
 logger = getLogger(__name__)
 
-def execute_worker_agent(task: str) -> str:
-    logger.info("Starting worker agent …")
+def execute_worker_agent(task: str, agent_id: str) -> str:
+    logger.info(f"Starting worker agent for agent {agent_id} …")
 
     graph = builder.compile()
 
-    graph_input =InputState(task=task)
+    graph_input = InputState(task=task)
 
-    context = Context(model=get_settings().LLM_MODEL_NAME)
+    context = Context(model=get_settings().LLM_MODEL_NAME, agent_id=agent_id)
 
     configuration = {"thread_id": str(uuid4()), "user_id": str(uuid4())}
 

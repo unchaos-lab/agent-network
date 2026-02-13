@@ -10,6 +10,7 @@ class Context(TypedDict):
     Defines the context for the agent.
     """
     model: str
+    agent_id: str
 
 
 class InputState(TypedDict):

@@ -11,7 +11,9 @@ from langchain_core.messages import BaseMessage, AIMessage
 
 from agent_network.agents.worker.shemas import Context, State, InputState
 from agent_network.agents.config.utils import load_chat_model, create_human_message, create_system_message, create_ai_message
-from agent_network.agents.worker.prompts import SYSTEM_PROMPT 
+from agent_network.agents.worker.prompts import SYSTEM_PROMPT
+from agent_network.store import AgentConfigStore
+from agent_network.config import get_settings
 
 logger = getLogger(__name__)
 
@@ -21,7 +23,16 @@ logger = getLogger(__name__)
 def setup(state: State, runtime: Runtime[Context]) -> Dict[str, Any]:
     """Initial setup node to pass the task to the state."""
 
-    messages: list[BaseMessage] = [create_system_message(SYSTEM_PROMPT),
+    agent_id = runtime.context["agent_id"]
+
+    store = AgentConfigStore(get_settings().redis_url)
+    system_prompt = store.get_system_prompt(agent_id)
+
+    if system_prompt is None:
+        logger.warning("No system prompt found for agent %s — using default", agent_id)
+        system_prompt = SYSTEM_PROMPT
+
+    messages: list[BaseMessage] = [create_system_message(system_prompt),
                                    create_human_message(f"here is the user's task: {state['task']}")]
     return {"messages": messages}
 
