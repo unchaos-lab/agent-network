@@ -9,6 +9,7 @@ dependencies = [
     "httpx>=0.28",
     "pydantic-settings>=2.7",
     "aio-pika>=9.4",
+    "redis>=5.0",
     "langgraph>=1.0.8",
     "langchain>=1.2.10",
     "langchain-openai>=1.1.9",
