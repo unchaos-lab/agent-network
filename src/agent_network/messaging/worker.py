@@ -19,6 +19,7 @@ from aio_pika.abc import AbstractIncomingMessage
 
 from agent_network.api.service import LightTasksService
 from agent_network.config import Settings, get_settings
+from agent_network.agents.worker.main import execute_worker_agent
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +68,8 @@ async def process_message(event: str, data: dict[str, Any]) -> None:
 
     service = _get_service()
     try:
+        task = execute_worker_agent(data.get("description", ""))
+        service.add_comment(task_id, task)
         service.mark_task_done(task_id)
         logger.info("Task %s marked as done", task_id)
     except Exception:
