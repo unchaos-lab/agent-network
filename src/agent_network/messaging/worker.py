@@ -23,16 +23,6 @@ from agent_network.agents.worker.main import execute_worker_agent
 
 logger = logging.getLogger(__name__)
 
-_service: LightTasksService | None = None
-
-
-def _get_service() -> LightTasksService:
-    """Return a lazily-initialised LightTasksService singleton."""
-    global _service  # noqa: PLW0603
-    if _service is None:
-        _service = LightTasksService.from_settings(get_settings())
-    return _service
-
 
 # ── shared processing logic ───────────────────────────────────────
 
@@ -66,10 +56,11 @@ async def process_message(event: str, data: dict[str, Any]) -> None:
         logger.warning("No task id found in payload — skipping")
         return
 
-    service = _get_service()
     try:
         agent_id = data.get("responsible", {}).get("id", "unknown")
         logger.info(f"Processing task {task_id} assigned to agent {agent_id}")
+
+        service = LightTasksService.from_agent_id(agent_id)
 
         task = execute_worker_agent(data.get("description", ""), agent_id)
         service.add_comment(task_id, task)

@@ -94,6 +94,13 @@ class AgentConfigStore:
             return None
         return config.get("system_prompt")
 
+    def get_api_key(self, agent_id: str) -> str | None:
+        """Convenience: return only the ``api_key`` field, or ``None``."""
+        config = self.get(agent_id)
+        if config is None:
+            return None
+        return config.get("api_key")
+
     # ── lifecycle ─────────────────────────────────────────────────
 
     def ping(self) -> bool:

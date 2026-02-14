@@ -29,6 +29,7 @@ SEED_AGENTS = [
                 "5. last propmt techniques in research literature.\n"
                 "6. the only output should be the prompt, do not include any other text or explanation."
             ),
+            "api_key": os.environ.get("AGENT_API_KEY", "REPLACE_WITH_ACTUAL_KEY"),
         },
     },
 ]

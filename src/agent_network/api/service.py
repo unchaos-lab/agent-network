@@ -11,7 +11,8 @@ import logging
 from typing import Any
 
 from agent_network.api.client import LightTasksClient
-from agent_network.config import Settings
+from agent_network.config import Settings, get_settings
+from agent_network.store import AgentConfigStore
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +41,20 @@ class LightTasksService:
                 "API key in the .env file."
             )
         client = LightTasksClient(settings, api_key=settings.agent_api_key)
+        return cls(client)
+
+    @classmethod
+    def from_agent_id(cls, agent_id: str) -> LightTasksService:
+        """Build a service authenticated with the API key stored in Redis for *agent_id*."""
+        settings = get_settings()
+        store = AgentConfigStore(settings.redis_url)
+        api_key = store.get_api_key(agent_id)
+        if not api_key:
+            raise RuntimeError(
+                f"No API key found in Redis for agent {agent_id}. "
+                "Seed the agent config with an 'api_key' field."
+            )
+        client = LightTasksClient(settings, api_key=api_key)
         return cls(client)
 
     # ── Tasks ───────────────────────────────────────────────────────
