@@ -8,6 +8,7 @@ from typing import Any
 
 from fastapi import FastAPI, Header, HTTPException, Request, status
 
+from agent_network.api.agents_router import router as agents_router
 from agent_network.messaging.publisher import RabbitPublisher
 from agent_network.webhook.signature import verify_signature
 
@@ -41,6 +42,20 @@ def create_consumer_app(
         task events are forwarded to RabbitMQ.
     """
     app = FastAPI(title="Agent Network — Webhook Consumer")
+
+    # ── CORS for frontend access ──────────────────────────────────
+    from fastapi.middleware.cors import CORSMiddleware
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    # ── Mount agents CRUD router ──────────────────────────────────
+    app.include_router(agents_router)
 
     # Store the secret on the app so middleware / routes can access it.
     app.state.webhook_secret = secret
